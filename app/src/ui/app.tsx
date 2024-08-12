@@ -327,6 +327,10 @@ export class App extends React.Component<IAppProps, IAppState> {
 
   public componentWillUnmount() {
     window.clearInterval(this.updateIntervalHandle)
+
+    if (__DARWIN__) {
+      window.removeEventListener('keydown', this.onMacOSWindowKeyDown)
+    }
   }
 
   private async performDeferredLaunchActions() {
@@ -1191,6 +1195,10 @@ export class App extends React.Component<IAppProps, IAppState> {
       window.addEventListener('keyup', this.onWindowKeyUp)
     }
 
+    if (__DARWIN__) {
+      window.addEventListener('keydown', this.onMacOSWindowKeyDown)
+    }
+
     document.addEventListener('focus', this.onDocumentFocus, {
       capture: true,
     })
@@ -1198,6 +1206,31 @@ export class App extends React.Component<IAppProps, IAppState> {
 
   private onDocumentFocus = (event: FocusEvent) => {
     this.props.dispatcher.appFocusedElementChanged()
+  }
+
+  /**
+   * Manages keyboard shortcuts specific to macOS.
+   * - adds Shift+F10 to open the context menus (like on Windows so macOS
+   *   keyboard users are not required to use VoiceOver to trigger context
+   *   menus)
+   */
+  private onMacOSWindowKeyDown = (event: KeyboardEvent) => {
+    // We do not want to override Shift+F10 behavior for the context menu on Windows.
+    if (!__DARWIN__) {
+      return
+    }
+
+    if (event.defaultPrevented) {
+      return
+    }
+
+    if (event.shiftKey && event.key === 'F10') {
+      document.activeElement?.dispatchEvent(
+        new Event('contextmenu', {
+          bubbles: true, // Required for React's event system
+        })
+      )
+    }
   }
 
   /**
@@ -1725,6 +1758,10 @@ export class App extends React.Component<IAppProps, IAppState> {
             selectedShell={this.state.selectedShell}
             selectedTheme={this.state.selectedTheme}
             selectedTabSize={this.state.selectedTabSize}
+            useCustomEditor={this.state.useCustomEditor}
+            customEditor={this.state.customEditor}
+            useCustomShell={this.state.useCustomShell}
+            customShell={this.state.customShell}
             repositoryIndicatorsEnabled={this.state.repositoryIndicatorsEnabled}
             onOpenFileInExternalEditor={this.openFileInExternalEditor}
             underlineLinks={this.state.underlineLinks}
@@ -2846,7 +2883,7 @@ export class App extends React.Component<IAppProps, IAppState> {
     const externalEditorLabel = this.state.selectedExternalEditor
       ? this.state.selectedExternalEditor
       : undefined
-    const shellLabel = this.state.selectedShell
+    const { useCustomShell, selectedShell } = this.state
     const filterText = this.state.repositoryFilterText
     return (
       <RepositoriesList
@@ -2866,7 +2903,7 @@ export class App extends React.Component<IAppProps, IAppState> {
         onShowRepository={this.showRepository}
         onOpenInExternalEditor={this.openInExternalEditor}
         externalEditorLabel={externalEditorLabel}
-        shellLabel={shellLabel}
+        shellLabel={useCustomShell ? undefined : selectedShell}
         dispatcher={this.props.dispatcher}
       />
     )
@@ -3040,7 +3077,9 @@ export class App extends React.Component<IAppProps, IAppState> {
       onRemoveRepositoryAlias: onRemoveRepositoryAlias,
       onViewOnGitHub: this.viewOnGitHub,
       repository: repository,
-      shellLabel: this.state.selectedShell,
+      shellLabel: this.state.useCustomShell
+        ? undefined
+        : this.state.selectedShell,
     })
 
     showContextualMenu(items)
@@ -3339,9 +3378,9 @@ export class App extends React.Component<IAppProps, IAppState> {
     }
 
     if (selectedState.type === SelectionType.Repository) {
-      const externalEditorLabel = state.selectedExternalEditor
-        ? state.selectedExternalEditor
-        : undefined
+      const externalEditorLabel = state.useCustomEditor
+        ? undefined
+        : state.selectedExternalEditor ?? undefined
 
       return (
         <RepositoryView
@@ -3375,6 +3414,9 @@ export class App extends React.Component<IAppProps, IAppState> {
             state.askForConfirmationOnCheckoutCommit
           }
           accounts={state.accounts}
+          isExternalEditorAvailable={
+            state.useCustomEditor || state.selectedExternalEditor !== null
+          }
           externalEditorLabel={externalEditorLabel}
           resolvedExternalEditor={state.resolvedExternalEditor}
           onOpenInExternalEditor={this.onOpenInExternalEditor}
