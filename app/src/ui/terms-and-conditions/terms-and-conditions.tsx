@@ -21,25 +21,21 @@ export class TermsAndConditions extends React.Component<
     return (
       <Dialog
         id="terms-and-conditions"
-        title="GitHub Open Source Applications Terms and Conditions"
+        title="GitHub 开源应用程序条款与条件"
         onSubmit={this.props.onDismissed}
         onDismissed={this.props.onDismissed}
       >
         <DialogContent>
           <p>
-            These GitHub Open Source Applications Terms and Conditions
-            ("Application Terms") are a legal agreement between you (either as
-            an individual or on behalf of an entity) and GitHub, Inc. regarding
-            your use of GitHub's applications, such as GitHub Desktop™ and
-            associated documentation ("Software"). These Application Terms apply
-            to the executable code version of the Software. Source code for the
-            Software is available separately and free of charge under open
-            source software license agreements. If you do not agree to all of
-            the terms in these Application Terms, do not download, install, use,
-            or copy the Software.
+            本 GitHub 开源应用程序条款和条件
+            “应用条款”是您（作为个人或代表实体）与 GitHub, Inc. 之间关于使用 GitHub
+            应用程序（如 GitHub Desktop™ 和相关文档，以下简称 “软件”）的法律协议。
+            本应用条款适用于软件的可执行代码版本。软件的源代码根据开源软件许可协议
+            单独免费提供。如果您不同意本应用条款中的所有条款，请勿下载、安装、使用
+            或复制本软件。
           </p>
 
-          <h2>Connecting to GitHub</h2>
+          <h2>连接到 GitHub</h2>
 
           <p>
             If you configure the Software to work with one or more accounts on
